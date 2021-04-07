@@ -1,0 +1,8 @@
+{
+    "require": {
+        "league/uri": "^6.4"
+    },
+    "require-dev": {
+        "phpunit/php-code-coverage": "^9.2"
+    }
+}

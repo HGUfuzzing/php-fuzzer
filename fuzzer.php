@@ -1,18 +1,55 @@
 <?php
+require_once __DIR__ . '/vendor/autoload.php';
+use SebastianBergmann\CodeCoverage\Filter;
+use SebastianBergmann\CodeCoverage\Driver\Selector;
+use SebastianBergmann\CodeCoverage\CodeCoverage;
+use SebastianBergmann\CodeCoverage\Report\Clover as CloverReport;
+use SebastianBergmann\CodeCoverage\Report\Text as TextReport;
+use SebastianBergmann\CodeCoverage\Report\Html\Facade as HtmlReport;
+
+
 if(!isset($argv[1]) || !isset($argv[2])) 
-    die('usage : php ' . pathinfo(__FILE__, PATHINFO_BASENAME) . ' <target file> <reps>');
+    die('usage : php ' . pathinfo(__FILE__, PATHINFO_BASENAME) . ' <target_file> <source1>[, <source2>, <source3>, ... ]');
+
 $target_file_path = $argv[1];
-$reps = (int)$argv[2];
+$sources = [];
+
+for($i = 2; $i < count($argv); $i++) {
+    if(! file_exists($argv[$i])) die('"' .  $argv[$i] . '" is not exist.');
+    $sources[] = $argv[$i];
+}
 
 if(! file_exists($target_file_path)) {
     die('The target file is not exist.');
 }
 
-require_once $target_file_path;
+require $target_file_path;
 
+$filter = new Filter;
+
+/* 
+    Problem : 
+        1. includeDirectory method에서 Command line argument로 받은 한글 path를 인식 못하는 문제 있음.
+*/
+foreach($sources as $source) {
+    $filter->includeDirectory($source);
+    echo "<include> : " . $source . "\n";
+}
+
+//setup
+$coverage_obj = new CodeCoverage(
+    (new Selector)->forLineCoverage($filter),
+    $filter
+);
+
+$reps = 100000;
 for($i = 0; $i < $reps; $i++) {
     try {
-        $coverage_obj = TEST_ROUTINE(random_string(20000));
+        
+        $coverage_obj->start(__FILE__);
+        TEST_ROUTINE(random_string(200));
+        $coverage_obj->stop();
+        
         $coverage = get_coverage_from_coverage_obj($coverage_obj);
         $acc = get_acc_from_coverage($coverage);
         print_r($acc . ' ');

@@ -1,12 +1,7 @@
 <?php 
 declare(strict_types=1);
 require_once __DIR__ . '/vendor/autoload.php';
-use SebastianBergmann\CodeCoverage\Filter;
-use SebastianBergmann\CodeCoverage\Driver\Selector;
-use SebastianBergmann\CodeCoverage\CodeCoverage;
-use SebastianBergmann\CodeCoverage\Report\Clover as CloverReport;
-use SebastianBergmann\CodeCoverage\Report\Text as TextReport;
-use SebastianBergmann\CodeCoverage\Report\Html\Facade as HtmlReport;
+
 
 //for target project
 use League\Uri\Contracts\UriException;
@@ -26,15 +21,7 @@ function TEST_ROUTINE($S) {
     global $_input;
     $_input = $S;
 
-    //setup
-    $filter = new Filter;
-    $filter->includeDirectory(__DIR__ . '/vendor/league/uri/src/UriTemplate/');
-    $coverage_obj = new CodeCoverage(
-        (new Selector)->forLineCoverage($filter),
-        $filter
-    );
     
-    $coverage_obj->start(__FILE__);
         $syn_err_cnt = 0;
         $template = _split(200);
         $variables = [
@@ -57,9 +44,6 @@ function TEST_ROUTINE($S) {
         } catch(SyntaxError $e) {
             // echo ++$syn_err_cnt . ' ';
         }
-    $coverage_obj->stop();
-
-    return $coverage_obj;
 }
 
 

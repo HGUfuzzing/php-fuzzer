@@ -4,18 +4,16 @@ if(!isset($argv[1]) || !isset($argv[2]))
 $target_file_path = $argv[1];
 $reps = (int)$argv[2];
 
+if(! file_exists($target_file_path)) {
+    die('The target file is not exist.');
+}
+
 require_once $target_file_path;
-
-$path = pathinfo($target_file_path, PATHINFO_DIRNAME);
-$target_file_name = pathinfo($target_file_path, PATHINFO_BASENAME);
-
-$xml_file_path = './reports/' . $target_file_name . '.xml';
 
 for($i = 0; $i < $reps; $i++) {
     try {
-        TEST_ROUTINE(random_string(1000));
-        $xml_obj = get_xml_object($xml_file_path);
-        $coverage = get_coverage_from_xml($xml_obj);
+        $coverage_obj = TEST_ROUTINE(random_string(20000));
+        $coverage = get_coverage_from_coverage_obj($coverage_obj);
         $acc = get_acc_from_coverage($coverage);
         print_r($acc . ' ');
     } catch(Exception $e) {
@@ -24,38 +22,32 @@ for($i = 0; $i < $reps; $i++) {
     }
 }
 
-function get_xml_object($file_path) {
-    if(!($xml_obj = simplexml_load_file($file_path))) {
-        throw new Exception("Cannot create xml object");
-    }
-    
-    $xml_obj = $xml_obj->project;
-    return $xml_obj;
-}
 
-function get_coverage_from_xml(SimpleXMLElement $xml_obj) {
+function get_coverage_from_coverage_obj(SebastianBergmann\CodeCoverage\CodeCoverage $coverage_obj) {
+    $report = $coverage_obj->getReport();
     static $coverage = [];
 
     $file_num = 0;
-    foreach($xml_obj->children() as $file) {
-        if(!isset($file['name'])) 
-            continue;
-        
-        foreach($file as $line) {
-            if(!isset($line['type']) || (string)$line['type'] != 'stmt')
-                continue;
-            
-            $count = (int)$line['count'];
-            $line_num = (int)$line['num'];
 
-            if(isset($coverage[$file_num][$line_num]))
-                $coverage[$file_num][$line_num] += $count;
-            else 
-                $coverage[$file_num][$line_num] = $count;
+    foreach ($report as $item) {
+        if (!$item instanceof SebastianBergmann\CodeCoverage\Node\File) {
+            continue;
+        }
+
+        $coverageData = $item->lineCoverageData();
+
+        foreach ($coverageData as $line => $data) {
+            if ($data === null) {
+                continue;
+            }
+            
+            if(!isset($coverage[$file_num][$line]))
+                $coverage[$file_num][$line] = count($data);
+            else
+                $coverage[$file_num][$line] += count($data);
         }
         $file_num += 1;
     }
-
     return $coverage;
 }
 
@@ -70,7 +62,6 @@ function get_acc_from_coverage($coverage) {
     }
     return $acc;
 }
-
 
 
 function random_string($len = 100) {

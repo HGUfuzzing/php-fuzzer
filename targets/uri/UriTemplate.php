@@ -28,10 +28,7 @@ function TEST_ROUTINE($S) {
 
     //setup
     $filter = new Filter;
-    //$filter->includeDirectory(__DIR__ . '/vendor/league/uri/src/');
     $filter->includeDirectory(__DIR__ . '/vendor/league/uri/src/UriTemplate/');
-    //$filter->includeDirectory(__DIR__ . '/vendor/league/uri/src/Exceptions');
-
     $coverage_obj = new CodeCoverage(
         (new Selector)->forLineCoverage($filter),
         $filter
@@ -63,11 +60,6 @@ function TEST_ROUTINE($S) {
     $coverage_obj->stop();
 
     return $coverage_obj;
-    
-    //report
-    // (new CloverReport)->process($coverage_obj, './reports/' . basename(__FILE__) . '.xml');
-    // (new HtmlReport)->process($coverage_obj, './reports/html3/num' . $numberOfTests);
-    // echo (new TextReport)->process($coverage_obj, true);
 }
 
 

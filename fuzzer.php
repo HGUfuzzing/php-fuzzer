@@ -8,51 +8,68 @@ use SebastianBergmann\CodeCoverage\Report\Text as TextReport;
 use SebastianBergmann\CodeCoverage\Report\Html\Facade as HtmlReport;
 
 
-if(!isset($argv[1]) || !isset($argv[2])) 
-    die('usage : php ' . pathinfo(__FILE__, PATHINFO_BASENAME) . ' <target_file> <source1>[, <source2>, <source3>, ... ]');
+if(!isset($argv[1]) || !isset($argv[2]) || !isset($argv[3])) 
+    die('usage : php ' . pathinfo(__FILE__, PATHINFO_BASENAME) . ' <target_file> <input_file> <source1>[, <source2>, <source3>, ... ]');
 
 $target_file_path = $argv[1];
+$input_file = $argv[2];
 $sources = [];
 
-for($i = 2; $i < count($argv); $i++) {
+for($i = 3; $i < count($argv); $i++) {
     if(! file_exists($argv[$i])) die('"' .  $argv[$i] . '" is not exist.');
     $sources[] = $argv[$i];
 }
+if(! file_exists($target_file_path)) die('The target file is not exist.');
+if(! file_exists($input_file)) die('The input file is not exist.');
 
-if(! file_exists($target_file_path)) {
-    die('The target file is not exist.');
-}
+echo "<target file> : $target_file_path \n";
+echo "<input file> : $input_file\n";
 
 require $target_file_path;
+
+$initial_input = read_text_from_file($input_file);
+
 
 $filter = new Filter;
 
 /* 
     Problem : 
-        1. includeDirectory method에서 Command line argument로 받은 한글 path를 인식 못하는 문제 있음.
+        includeDirectory method에서 Command line argument로 받은 한글 path를 인식 못하는 문제 있음.
 */
 foreach($sources as $source) {
     $filter->includeDirectory($source);
-    echo "<include> : " . $source . "\n";
+    echo "<source> : " . $source . "\n";
 }
 
-//setup
 $coverage_obj = new CodeCoverage(
     (new Selector)->forLineCoverage($filter),
     $filter
 );
 
-$reps = 100000;
-for($i = 0; $i < $reps; $i++) {
+$queue1 = [$initial_input];
+$queue2 = [];
+
+$prev_coverage = TEST($initial_input);
+
+while(1) {
     try {
+        if(count($queue1) >= 1) $prev_input = array_pop($queue1);
+        else $prev_input = array_pop($queue2);
         
-        $coverage_obj->start(__FILE__);
-        TEST_ROUTINE(random_string(200));
-        $coverage_obj->stop();
-        
-        $coverage = get_coverage_from_coverage_obj($coverage_obj);
-        $acc = get_acc_from_coverage($coverage);
-        print_r($acc . ' ');
+        $cur_input = mutate($prev_input);
+        $cur_coverage = TEST($cur_input);
+        if(has_difference($prev_coverage, $cur_coverage)) {
+            $queue1[] = $cur_input;
+            echo "\nInteresting finded!\n";
+            echo "$cur_input\n";
+        }
+        else {
+            $queue2[] = $cur_input;
+        }
+        $prev_coverage = $cur_coverage;
+        // echo count($queue1) . ', ' . count($queue2) . "\n";
+        $acc = get_acc_from_coverage($cur_coverage);
+        echo ("$acc ");
     } catch(Exception $e) {
         echo 'Exception Message : ' . $e->getMessage();
         return;
@@ -62,7 +79,7 @@ for($i = 0; $i < $reps; $i++) {
 
 function get_coverage_from_coverage_obj(SebastianBergmann\CodeCoverage\CodeCoverage $coverage_obj) {
     $report = $coverage_obj->getReport();
-    static $coverage = [];
+    $coverage = [];
 
     $file_num = 0;
 
@@ -85,9 +102,21 @@ function get_coverage_from_coverage_obj(SebastianBergmann\CodeCoverage\CodeCover
         }
         $file_num += 1;
     }
+
     return $coverage;
 }
 
+function has_difference($prev_coverage, $cur_coverage) {
+    foreach($cur_coverage as $file_num => $file) {
+        foreach($file as $line => $cnt) {
+            if(!isset($prev_coverage[$file_num][$line])) {
+                // echo "\nfile num/line : $file_num/$line\n";
+                return true;
+            }
+        }
+    }
+    return false;
+}
 
 function get_acc_from_coverage($coverage) {
     $acc = 0;
@@ -101,7 +130,7 @@ function get_acc_from_coverage($coverage) {
 }
 
 
-function random_string($len = 100) {
+function random_string($len = 1000) {
     $str = '';
     for($i = 0; $i < $len; $i++) {
         $ascii_code = mt_rand(25, 126);
@@ -113,4 +142,34 @@ function random_string($len = 100) {
             $str .= chr($ascii_code);   
     }
     return $str;
+}
+
+function mutate($input) {
+    return random_string();
+}
+
+
+function read_text_from_file($file) {
+    $fp = fopen($file, "r");
+
+    $text = '';
+    while( !feof($fp) ) {
+        $text .= fgets($fp);
+    }
+
+    // 파일 닫기
+    fclose($fp);
+
+    return $text;
+}
+
+function TEST(string $input) {
+    global $coverage_obj, $target_file_path;
+
+    $coverage_obj->start($target_file_path, true);
+    TEST_ROUTINE($input);
+    $coverage_obj->stop();
+    
+    $coverage = get_coverage_from_coverage_obj($coverage_obj);
+    return $coverage;
 }

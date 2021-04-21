@@ -2,8 +2,17 @@
     class Mutator {
         
         private $input;
+
+        function __construct(string $input) {
+            $this->input = $input;
+        }
+
         function setInput($str){
             $this->input = $str;
+        }
+
+        function getInput(){
+            return $this->input;
         }
 
         function delete_random_character(){

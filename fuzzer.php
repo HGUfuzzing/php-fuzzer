@@ -1,5 +1,7 @@
 <?php
 require_once __DIR__ . '/vendor/autoload.php';
+require './Mutator.php';
+
 use SebastianBergmann\CodeCoverage\Filter;
 use SebastianBergmann\CodeCoverage\Driver\Selector;
 use SebastianBergmann\CodeCoverage\CodeCoverage;
@@ -145,7 +147,13 @@ function random_string($len = 1000) {
 }
 
 function mutate($input) {
-    return random_string();
+    $mut_obj = new Mutator($input);
+
+    $num = strlen($input) / 12;
+
+    for($i = 0; $i < $num; $i++) $mut_obj->mutate();
+
+    return $mut_obj->getInput();
 }
 
 

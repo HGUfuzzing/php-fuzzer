@@ -1,0 +1,12 @@
+{
+    "name": "hyeonseopjeong/jsphize",
+    "authors": [
+        {
+            "name": "HyeonseopJeong",
+            "email": "gustjq1101@naver.com"
+        }
+    ],
+    "require": {
+        "js-phpize/js-phpize": "^2.8"
+    }
+}

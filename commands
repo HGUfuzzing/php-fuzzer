@@ -1,0 +1,5 @@
+php fuzzer.php ./targets/number-to-words/NumberTransformer.php ./seed.txt ./targets/number-to-words/vendor/kwn/number-to-words/src
+
+php fuzzer.php ./targets/uri/UriTemplate.php ./seed.txt ./targets/uri/vendor/league/uri/src
+
+php fuzzer.php targets/jsphize/JsphizeTemplate.php ./seed.txt ./targets/jsphize/vendor/js-phpize/js-phpize/src/JsPhpize/

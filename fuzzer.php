@@ -53,8 +53,10 @@ $queue2 = [];
 
 $prev_coverage = TEST($initial_input);
 
-while(1) {
+for($tc = 0; ;$tc++) {
     try {
+        if($tc % 100)
+            gc_collect_cycles();
         if(count($queue1) >= 1) $prev_input = array_pop($queue1);
         else $prev_input = array_pop($queue2);
         
@@ -68,6 +70,7 @@ while(1) {
         else {
             $queue2[] = $cur_input;
         }
+        unset($prev_coverage);
         $prev_coverage = $cur_coverage;
         // echo count($queue1) . ', ' . count($queue2) . "\n";
         $acc = get_acc_from_coverage($cur_coverage);
@@ -111,7 +114,7 @@ function get_coverage_from_coverage_obj(SebastianBergmann\CodeCoverage\CodeCover
 function has_difference($prev_coverage, $cur_coverage) {
     foreach($cur_coverage as $file_num => $file) {
         foreach($file as $line => $cnt) {
-            if(!isset($prev_coverage[$file_num][$line])) {
+            if(!isset($prev_coverage[$file_num][$line]) || ($prev_coverage[$file_num][$line] === 0 && $cnt != 0)) {
                 // echo "\nfile num/line : $file_num/$line\n";
                 return true;
             }
@@ -174,7 +177,7 @@ function read_text_from_file($file) {
 function TEST(string $input) {
     global $coverage_obj, $target_file_path;
 
-    $coverage_obj->start($target_file_path, true);
+    $coverage_obj->start($target_file_path, false);
     TEST_ROUTINE($input);
     $coverage_obj->stop();
     

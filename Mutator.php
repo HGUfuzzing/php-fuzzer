@@ -36,22 +36,13 @@
 
         function insert_random_character(){
             $len = strlen($this->input);
-            $pos = rand(0, $len);
+            $pos = rand(0, $len-1);
 
             $random_char = chr(rand(32, 126));
 
-            $result;
-            $j=0;
-
-            for($i=0; $i<$len+1; $i++){
-                if($pos === $i)
-                    $result[$i] = $random_char;
-                else
-                    $result[$i] = $this->input[$j++];
-            }
-
-            $result = implode('', $result);
-            return $result;
+            return  substr($this->input, 0, $pos)
+                    . $random_char
+                    . substr($this->input, $pos);
         }
 
         function alternate_random_character(){
@@ -73,7 +64,7 @@
             $pos = rand(0, strlen($this->input)-1);
             $c = $this->input[$pos];
 
-            $bit = 1 << rand(0, 6);
+            $bit = 1 << rand(0, 7);
             $new_c = chr(ord($c) ^ $bit);
             $result;
             
@@ -90,7 +81,7 @@
 
         function insert_repeated_random_characters(){
             $len = strlen($this->input);
-            $pos = rand(0, $len);
+            $pos = rand(0, $len-1);
             $random_num = rand(0,10);
             $random_char = chr(rand(32, 126));
 

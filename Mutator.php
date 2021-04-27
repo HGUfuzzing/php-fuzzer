@@ -2,9 +2,11 @@
     class Mutator {
         
         private $input;
+        private $binHelper;
 
         function __construct(string $input) {
             $this->input = $input;
+            $this->binHelper = new BinHelper();
         }
 
         function setInput($str){
@@ -82,8 +84,37 @@
                     . substr($this->input, $pos);
         }
 
+        // increase/subtract 1~35  =>  arith 8
+        function arithmetic_8bit(){
+            $result = "";
+            $str = $this->input;
+            $len = strlen($str);
+            
+            $increase_val = 1;
+            $decrease_val = -1;
+            $is_increase_phase = true;
+
+            for($i=0; $i<$len; $i++){
+                if($is_increase_phase)
+                {
+                    $c = ord($str) + $increase_val;
+                    $increase_val = ($increase_val + 1) % 36;
+                }
+                else 
+                {
+                    $c = ord($str) + $decrease_val;
+                    $decrease_val = ($decrease_val - 1) % 36;
+                }
+
+                $str = substr($str, 1);
+                $result = $result . chr($c);
+            }
+
+            return $result;
+        }
+
         function mutate(){
-            $r = rand(0, 4);
+            $r = rand(0, 5);
             switch ($r){
                 case 0:
                     return $this->delete_random_character();
@@ -95,6 +126,8 @@
                     return $this->flip_random_character();
                 case 4:
                     return $this->insert_repeated_random_characters();
+                case 5:
+                    return $this->arithmetic_8bit();
             }
         }
     }

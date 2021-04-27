@@ -21,17 +21,9 @@
             
             $len = strlen($this->input);
             $pos = rand(0, $len-1);
-            $result;
-            for($i=0; $i<$len; $i++){
-                if($pos === $i){
-                    $result[$i] = '';
-                    continue;
-                }
-                $result[$i] = $this->input[$i];
-            }
-
-            $result = implode('', $result);
-            return $result;
+            
+            return  substr($this->input, 0, $pos) 
+                    . substr($this->input, $pos+1);
         }
 
         function insert_random_character(){

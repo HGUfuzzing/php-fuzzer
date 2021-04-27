@@ -2,11 +2,9 @@
     class Mutator {
         
         private $input;
-        private $binHelper;
 
         function __construct(string $input) {
             $this->input = $input;
-            $this->binHelper = new BinHelper();
         }
 
         function setInput($str){

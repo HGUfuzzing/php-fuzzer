@@ -88,8 +88,19 @@
             return $result;
         }
 
+        function insert_repeated_random_characters(){
+            $len = strlen($this->input);
+            $pos = rand(0, $len);
+            $random_num = rand(0,10);
+            $random_char = chr(rand(32, 126));
+
+            return  substr($this->input, 0, $pos)
+                    . str_repeat($random_char, $random_num)
+                    . substr($this->input, $pos);
+        }
+
         function mutate(){
-            $r = rand(0, 3);
+            $r = rand(0, 4);
             switch ($r){
                 case 0:
                     return $this->delete_random_character();
@@ -99,6 +110,8 @@
                     return $this->alternate_random_character();
                 case 3:
                     return $this->flip_random_character();
+                case 4:
+                    return $this->insert_repeated_random_characters();
             }
         }
     }

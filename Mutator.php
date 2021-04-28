@@ -82,6 +82,7 @@
                     . substr($this->input, $pos);
         }
 
+        // increase/subtract 1~35  =>  arith 8
         function arithmetic_8bit(){
             $result = "";
             $str = $this->input;

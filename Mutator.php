@@ -21,37 +21,20 @@
             
             $len = strlen($this->input);
             $pos = rand(0, $len-1);
-            $result;
-            for($i=0; $i<$len; $i++){
-                if($pos === $i){
-                    $result[$i] = '';
-                    continue;
-                }
-                $result[$i] = $this->input[$i];
-            }
-
-            $result = implode('', $result);
-            return $result;
+            
+            return  substr($this->input, 0, $pos) 
+                    . substr($this->input, $pos+1);
         }
 
         function insert_random_character(){
             $len = strlen($this->input);
-            $pos = rand(0, $len);
+            $pos = rand(0, $len-1);
 
             $random_char = chr(rand(32, 126));
 
-            $result;
-            $j=0;
-
-            for($i=0; $i<$len+1; $i++){
-                if($pos === $i)
-                    $result[$i] = $random_char;
-                else
-                    $result[$i] = $this->input[$j++];
-            }
-
-            $result = implode('', $result);
-            return $result;
+            return  substr($this->input, 0, $pos)
+                    . $random_char
+                    . substr($this->input, $pos);
         }
 
         function alternate_random_character(){
@@ -73,7 +56,7 @@
             $pos = rand(0, strlen($this->input)-1);
             $c = $this->input[$pos];
 
-            $bit = 1 << rand(0, 6);
+            $bit = 1 << rand(0, 7);
             $new_c = chr(ord($c) ^ $bit);
             $result;
             
@@ -88,8 +71,19 @@
             return $result;
         }
 
+        function insert_repeated_random_characters(){
+            $len = strlen($this->input);
+            $pos = rand(0, $len-1);
+            $random_num = rand(0,10);
+            $random_char = chr(rand(32, 126));
+
+            return  substr($this->input, 0, $pos)
+                    . str_repeat($random_char, $random_num)
+                    . substr($this->input, $pos);
+        }
+
         function mutate(){
-            $r = rand(0, 3);
+            $r = rand(0, 4);
             switch ($r){
                 case 0:
                     return $this->delete_random_character();
@@ -99,6 +93,8 @@
                     return $this->alternate_random_character();
                 case 3:
                     return $this->flip_random_character();
+                case 4:
+                    return $this->insert_repeated_random_characters();
             }
         }
     }

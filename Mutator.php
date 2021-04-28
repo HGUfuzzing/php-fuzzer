@@ -61,7 +61,7 @@
             
             return  substr($this->input, 0, $pos) 
                     . $new_c 
-                    . substr($this->input, $pos);
+                    . substr($this->input, $pos+1);
         }
 
         function flip_2bits(){
@@ -76,7 +76,7 @@
 
             return  substr($this->input, 0, $pos) 
                     . $new_c 
-                    . substr($this->input, $pos);
+                    . substr($this->input, $pos+1);
         }
 
         function flip_4bits(){
@@ -91,7 +91,7 @@
             
             return  substr($this->input, 0, $pos) 
                     . $new_c 
-                    . substr($this->input, $pos);
+                    . substr($this->input, $pos+1);
         }
 
         function insert_repeated_random_characters(){

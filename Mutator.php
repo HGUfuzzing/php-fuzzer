@@ -49,26 +49,49 @@
             return $this->input;
         }
 
-        function flip_random_character(){
+        function flip_1bit(){
             if($this->input === "")
                 return $this->input;
 
             $pos = rand(0, strlen($this->input)-1);
             $c = $this->input[$pos];
 
-            $bit = 1 << rand(0, 7);
+            $bit = 0b00000001 << rand(0, 7);
             $new_c = chr(ord($c) ^ $bit);
-            $result;
             
-            for($i=0; $i<strlen($this->input); $i++){
-                if($i===$pos)
-                    $result[$i] = $new_c;
-                else
-                    $result[$i] = $this->input[$i];
-            }
+            return  substr($this->input, 0, $pos) 
+                    . $new_c 
+                    . substr($this->input, $pos);
+        }
 
-            $result = implode('', $result);
-            return $result;
+        function flip_2bits(){
+            if($this->input === "")
+                return $this->input;
+
+            $pos = rand(0, strlen($this->input)-1);
+            $c = $this->input[$pos];
+
+            $bit = 0b00000011 << rand(0, 6);
+            $new_c = chr(ord($c) ^ $bit);
+
+            return  substr($this->input, 0, $pos) 
+                    . $new_c 
+                    . substr($this->input, $pos);
+        }
+
+        function flip_4bits(){
+            if($this->input === "")
+                return $this->input;
+
+            $pos = rand(0, strlen($this->input)-1);
+            $c = $this->input[$pos];
+
+            $bit = 0b00001111 << rand(0, 4);
+            $new_c = chr(ord($c) ^ $bit);
+            
+            return  substr($this->input, 0, $pos) 
+                    . $new_c 
+                    . substr($this->input, $pos);
         }
 
         function insert_repeated_random_characters(){
@@ -82,37 +105,8 @@
                     . substr($this->input, $pos);
         }
 
-        // increase/subtract 1~35  =>  arith 8
-        function arithmetic_8bit(){
-            $result = "";
-            $str = $this->input;
-            $len = strlen($str);
-            
-            $increase_val = 1;
-            $decrease_val = -1;
-            $is_increase_phase = true;
-
-            for($i=0; $i<$len; $i++){
-                if($is_increase_phase)
-                {
-                    $c = ord($str) + $increase_val;
-                    $increase_val = ($increase_val + 1) % 36;
-                }
-                else 
-                {
-                    $c = ord($str) + $decrease_val;
-                    $decrease_val = ($decrease_val - 1) % 36;
-                }
-
-                $str = substr($str, 1);
-                $result = $result . chr($c);
-            }
-
-            return $result;
-        }
-
         function mutate(){
-            $r = rand(0, 5);
+            $r = rand(0, 7);
             switch ($r){
                 case 0:
                     return $this->delete_random_character();
@@ -121,11 +115,13 @@
                 case 2:
                     return $this->alternate_random_character();
                 case 3:
-                    return $this->flip_random_character();
-                case 4:
                     return $this->insert_repeated_random_characters();
+                case 4:
+                    return $this->flip_1bit();
                 case 5:
-                    return $this->arithmetic_8bit();
+                    return $this->flip_2bits();
+                case 6:
+                    return $this->flip_4bits();
             }
         }
     }

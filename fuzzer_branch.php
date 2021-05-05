@@ -69,17 +69,20 @@ for($tc = 0; ;$tc++) {
 
         unset($prev_branch);
         $prev_branch = $cur_branch;
-        $acc = get_branch_acc_from_coverage($cur_branch);
-        echo ("$acc ");
 
-    } catch(Exception $e) {
+    } catch (Throwable $e) {
+        echo 'Exception Message : ' . $e->getMessage();
+        // return;
+        // continue;
+    } 
+    catch(Exception $e) {
         echo 'Exception Message : ' . $e->getMessage();
         // continue;
-        return;
+        // return;
     } catch(Error $e) {
-        echo 'Error Message : ' . $e->getMessage();
+        // echo 'Error Message : ' . $e->getMessage();
         // continue;
-        return;
+        // return;
     }
 }
 
@@ -102,7 +105,9 @@ function get_branch_acc_from_coverage($branch_coverage) {
 }
 
 function has_branch_different($prev_branch, $cur_branch) {
-    
+    $acc = 0;
+    $status = false;
+
     foreach ($cur_branch as $file => $functions) 
     {
         foreach ($functions as $functionName => $functionData) 
@@ -110,13 +115,19 @@ function has_branch_different($prev_branch, $cur_branch) {
             foreach ($functionData['branches'] as $branchId => $branchData) 
             {
                 if(!isset($prev_branch[$file][$functionName]['branches'][$branchId])){
-                    return true;
+                    $status = true;
+                    // return true;
+                }
+                if($branchData) {
+                    $acc++;
                 }
             }
         }
     }
 
-    return false;
+    echo "$acc ";
+    return $status;
+    // return false;
 }
 
 
@@ -165,7 +176,7 @@ function get_line_coverage_from_coverage_obj(CodeCoverage $coverage_obj) {
 }
 
 function get_branch_coverage_from_coverage_obj(CodeCoverage $coverage_obj) {
-    $branch = [];
+    static $branch = []; // static?
     $coverage_data = $coverage_obj->getData();
     $functionCoverage = $coverage_data->functionCoverage();
 
@@ -173,22 +184,20 @@ function get_branch_coverage_from_coverage_obj(CodeCoverage $coverage_obj) {
     {
         foreach ($functions as $functionName => $functionData) 
         {
-            foreach ($functionData['branches'] as $branchId => $branchData) 
+            
+            foreach ($functionData['paths'] as $pathId => $pathData) 
             {
-                // if(!isset($branch[$file][$functionName]['branches'][$branchId]))
-                // {
-                //     $branch[$file][$functionName]['branches'][$branchId] = 0;
-                // }
-
-                if ((bool) $branchData['hit'])
+                if ( (bool) $pathData['hit']) 
                 {
-                    $branch[$file][$functionName]['branches'][$branchId]++;
+                    foreach ($pathData['path'] as $id => $branchId){
+                        $branch[$file][$functionName]['branches'][$branchId]++;
+                        // echo $branch[$file][$functionName]['branches'][$branchId] . " ";
+                    }
+                    // echo "\n";
                 }
-                //echo "file: {$file}\n branchId: {$branchId}\n hit: {$branch[$file][$functionName]['branches'][$branchId]}\n";
             }
         }
     }
-
     return $branch;
 }
 
@@ -199,7 +208,6 @@ function TEST(string $input) {
     TEST_ROUTINE($input);
     $coverage_obj->stop();
     
-    //$line_coverage = get_line_coverage_from_coverage_obj($coverage_obj);
     $branch_coverage = get_branch_coverage_from_coverage_obj($coverage_obj);
     
     return $branch_coverage;

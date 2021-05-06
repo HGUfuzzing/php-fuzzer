@@ -62,72 +62,50 @@ for($tc = 0; ;$tc++) {
         
         $cur_input = mutate($prev_input);
         $cur_branch = TEST($cur_input);
-        if(has_branch_different($prev_branch, $cur_branch)) {
+        if(has_branch_difference($prev_branch, $cur_branch)) {
             $queue1[] = $cur_input;
             echo "\nInteresting finded!\n";
         }
 
+        echo get_branch_acc_from_branch_coverage($cur_branch) . ' ';
+
         unset($prev_branch);
         $prev_branch = $cur_branch;
 
-    } catch (Throwable $e) {
-        echo 'Exception Message : ' . $e->getMessage();
-        // return;
-        // continue;
-    } 
+    }
     catch(Exception $e) {
         echo 'Exception Message : ' . $e->getMessage();
-        // continue;
-        // return;
     } catch(Error $e) {
-        // echo 'Error Message : ' . $e->getMessage();
-        // continue;
-        // return;
+        echo 'Error Message : ' . $e->getMessage();
     }
 }
 
 
-function get_branch_acc_from_coverage($branch_coverage) {
+function get_branch_acc_from_branch_coverage($branch_coverage) {
     $acc = 0;
-    foreach ($branch_coverage as $file => $functions) 
-    {
-        foreach ($functions as $functionName => $functionData) 
-        {
-            foreach ($functionData['branches'] as $branchId => $branchData) 
-            {
-                if($branchData){
-                    $acc++;
-                }
+    foreach ($branch_coverage as $file => $functions) {
+        foreach ($functions as $functionName => $functionData) {
+            foreach ($functionData['branches'] as $branchId => $branchData) {
+                if($branchData) 
+                    $acc += 1;
             }
         }
     }
     return $acc;
 }
 
-function has_branch_different($prev_branch, $cur_branch) {
-    $acc = 0;
-    $status = false;
-
-    foreach ($cur_branch as $file => $functions) 
-    {
-        foreach ($functions as $functionName => $functionData) 
-        {
-            foreach ($functionData['branches'] as $branchId => $branchData) 
-            {
-                if(!isset($prev_branch[$file][$functionName]['branches'][$branchId])){
-                    $status = true;
-                    // return true;
-                }
-                if($branchData) {
-                    $acc++;
+function has_branch_difference($prev_branch, $cur_branch) {
+    foreach ($cur_branch as $file => $functions) {
+        foreach ($functions as $functionName => $functionData) {
+            foreach ($functionData['branches'] as $branchId => $branchCount) {
+                if(!isset($prev_branch[$file][$functionName]['branches'][$branchId]) || 
+                    $prev_branch[$file][$functionName]['branches'][$branchId] < $branchCount) 
+                {
+                    return true;
                 }
             }
         }
     }
-
-    echo "$acc ";
-    return $status;
-    // return false;
 }
 
 
@@ -155,45 +133,21 @@ function read_text_from_file($file) {
     return $text;
 }
 
-function get_line_coverage_from_coverage_obj(CodeCoverage $coverage_obj) {
-    $line = [];
-    $coverage_data = $coverage_obj->getData();
-    $lineCoverage = $coverage_data->lineCoverage();
-
-    foreach ($lineCoverage as $file => $lines) 
-    {
-        foreach ($lines as $k => $v) {
-            if(!isset($line[$file][$k])){
-                $line[$file][$k] = count($v);
-            }
-            else {
-                $line[$file][$k] = +count($v);
-            }
-        }
-    }
-
-    return $line;
-}
-
 function get_branch_coverage_from_coverage_obj(CodeCoverage $coverage_obj) {
-    static $branch = []; // static?
+    $branch = [];
     $coverage_data = $coverage_obj->getData();
     $functionCoverage = $coverage_data->functionCoverage();
 
-    foreach ($functionCoverage as $file => $functions) 
-    {
-        foreach ($functions as $functionName => $functionData) 
-        {
-            
-            foreach ($functionData['paths'] as $pathId => $pathData) 
-            {
-                if ( (bool) $pathData['hit']) 
-                {
-                    foreach ($pathData['path'] as $id => $branchId){
-                        $branch[$file][$functionName]['branches'][$branchId]++;
-                        // echo $branch[$file][$functionName]['branches'][$branchId] . " ";
+    foreach ($functionCoverage as $file => $functions) {
+        foreach ($functions as $functionName => $functionData) {
+            foreach ($functionData['paths'] as $pathId => $pathData) {
+                if ( (bool) $pathData['hit']) {
+                    foreach ($pathData['path'] as $id => $branchId) {
+                        if(isset($branch[$file][$functionName]['branches'][$branchId]))
+                            $branch[$file][$functionName]['branches'][$branchId] += 1;
+                        else
+                            $branch[$file][$functionName]['branches'][$branchId] = 1;
                     }
-                    // echo "\n";
                 }
             }
         }

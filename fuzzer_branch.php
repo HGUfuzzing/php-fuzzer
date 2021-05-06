@@ -54,7 +54,7 @@ $prev_branch = TEST($initial_input);
 
 for($tc = 0; ;$tc++) {
     try {
-        if($tc % 100)
+        if($tc % 100 == 0)
             gc_collect_cycles();
         
         $idx = rand(0, count($queue1)-1);

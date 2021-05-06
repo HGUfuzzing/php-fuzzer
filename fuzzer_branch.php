@@ -34,7 +34,6 @@ require $target_file_path;
 
 $initial_input = read_text_from_file($input_file);
 
-
 $filter = new Filter;
 
 foreach($sources as $source) {
@@ -49,8 +48,6 @@ $coverage_obj = new CodeCoverage(
 
 $queue1 = [$initial_input];
 $queue2 = [];
-
-$prev_branch = TEST($initial_input);
 
 for($tc = 0; ;$tc++) {
     try {

@@ -59,15 +59,17 @@ for($tc = 0; ;$tc++) {
         
         $cur_input = mutate($prev_input);
         $cur_branch = TEST($cur_input);
-        if(has_branch_difference($prev_branch, $cur_branch)) {
+        $cur_bucketed_branch = get_bucketed_branch_from_branch_coverage($cur_branch);
+
+        if(has_bucketed_branch_difference($prev_bucketed_branch, $cur_bucketed_branch)) {
             $queue1[] = $cur_input;
             echo "\nInteresting finded!\n";
         }
 
-        echo get_branch_acc_from_branch_coverage($cur_branch) . ' ';
-
-        unset($prev_branch);
-        $prev_branch = $cur_branch;
+        // get_bucketed_branch_acc_from_branch_coverage($cur_bucketed_branch);
+        echo get_bucketed_branch_acc_from_branch_coverage($cur_bucketed_branch) . ' ';
+        unset($prev_bucketed_branch);
+        $prev_bucketed_branch = $cur_bucketed_branch;
 
     }
     catch(Exception $e) {
@@ -105,6 +107,37 @@ function has_branch_difference($prev_branch, $cur_branch) {
     }
 }
 
+function get_bucketed_branch_acc_from_branch_coverage($bucketed_branch_coverage){
+    $acc = 0;
+
+    foreach ($bucketed_branch_coverage as $file => $functions) {
+        foreach ($functions as $functionName => $functionData) {
+            foreach ($functionData['branches'] as $branchId => $branch_bucket) {
+                foreach($branch_bucket as $bucketId => $hasCovered){
+                    if($hasCovered){
+                        $acc++;
+                    }
+                } 
+            }
+        }
+    }
+    return $acc;
+}
+
+
+function has_bucketed_branch_difference($prev_bucketed_branch, $cur_bucketed_branch) {
+    foreach ($cur_bucketed_branch as $file => $functions) {
+        foreach ($functions as $functionName => $functionData) {
+            foreach ($functionData['branches'] as $branchId => $branch_bucket) {
+                foreach($branch_bucket as $bucketId => $hasCovered){
+                    if(!isset($prev_bucketed_branch[$file][$functionName]['branches'][$branchId][$bucketId])){
+                        return true;
+                    }
+                } 
+            }
+        }
+    }
+}
 
 function mutate($input) {
     $mut_obj = new Mutator($input);
@@ -150,6 +183,44 @@ function get_branch_coverage_from_coverage_obj(CodeCoverage $coverage_obj) {
         }
     }
     return $branch;
+}
+
+function getBucketId($branchIdCount){
+    if ($branchIdCount <= 1)
+        return 0;
+    else if ($branchIdCount == 2)
+        return 1;
+    else if ($branchIdCount <= 4)
+        return 2;
+    else if ($branchIdCount <= 8)
+        return 3;
+    else if ($branchIdCount <= 16)
+        return 4;
+    else if ($branchIdCount <= 32)
+        return 5;
+    else if ($branchIdCount <= 64)
+        return 6;
+    else if ($branchIdCount <= 128)
+        return 7;
+    else
+        return 8;
+}
+
+function get_bucketed_branch_from_branch_coverage($branchCoverage) {
+    $bucketed_branch = [];
+
+    foreach ($branchCoverage as $file => $functions) {
+        foreach ($functions as $functionName => $functionData) {
+            foreach ($functionData['branches'] as $branchId => $branchCount) {
+                $bucketId = getBucketId($branchCount);
+                if(isset($branch[$file][$functionName]['branches'][$branchId][$bucketId]))
+                    $bucketed_branch[$file][$functionName]['branches'][$branchId][$bucketId] += 1;
+                else
+                    $bucketed_branch[$file][$functionName]['branches'][$branchId][$bucketId] = 1;
+            }
+        }
+    }
+    return $bucketed_branch;
 }
 
 function TEST(string $input) {

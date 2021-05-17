@@ -19,6 +19,7 @@ if(!isset($argv[1]) || !isset($argv[2]) || !isset($argv[3]))
 $target_file_path = $argv[1];
 $input_file = $argv[2];
 $sources = [];
+$outputDir = getcwd() . '/output';
 
 for($i = 3; $i < count($argv); $i++) {
     if(! file_exists($argv[$i])) die('"' .  $argv[$i] . '" is not exist.');
@@ -41,6 +42,8 @@ foreach($sources as $source) {
     echo "<source> : " . $source . "\n";
 }
 
+echo "<output dir> : " . $outputDir . "\n";
+
 $coverage_obj = new CodeCoverage(
     (new Selector)->forLineAndPathCoverage($filter),
     $filter
@@ -49,6 +52,8 @@ $coverage_obj = new CodeCoverage(
 $queue1 = [$initial_input];
 $queue2 = [];
 $global_bucketed_branch = [];
+
+set_shutdown_handler();
 
 for($tc = 0; ;$tc++) {
     try {
@@ -77,9 +82,9 @@ for($tc = 0; ;$tc++) {
         $prev_branch = $cur_branch;
     }
     catch(Exception $e) {
-        echo 'Exception Message : ' . $e->getMessage();
+        echo "\n" . 'Exception Message : ' . $e->getMessage() . "\n";
     } catch(Error $e) {
-        echo 'Error Message : ' . $e->getMessage();
+        echo "\n" . 'Error Message : ' . $e->getMessage() . "\n";
     }
 }
 
@@ -257,6 +262,33 @@ function get_bucketed_branch_from_branch_coverage($branchCoverage) {
         }
     }
     return $bucketed_branch;
+}
+
+
+function set_shutdown_handler() {
+    \register_shutdown_function(function() {
+        global $outputDir, $cur_input;
+
+        echo "@@@@@@@@@@@@\n";
+        $error = \error_get_last();
+        if ($error === null) {
+            return;
+        }
+
+        $crashInfo = "Fatal error: {$error['message']} in {$error['file']} on line {$error['line']}";
+
+        $hash = \md5($cur_input);
+        $path = $outputDir . '/crash-' . $hash . '.txt';
+        echo "\n!! $path\n";
+        if (!file_exists($outputDir)) {
+            mkdir($outputDir, 0777, true);
+            echo "\n!!\n";
+        }
+        echo "\n!!\n";
+        \file_put_contents($path, $cur_input);
+        echo "\n!!\n";
+        echo $crashInfo;
+    });
 }
 
 function TEST(string $input) {

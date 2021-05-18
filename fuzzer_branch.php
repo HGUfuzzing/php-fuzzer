@@ -19,6 +19,7 @@ if(!isset($argv[1]) || !isset($argv[2]) || !isset($argv[3]))
 $target_file_path = $argv[1];
 $input_file = $argv[2];
 $sources = [];
+$outputDir = getcwd() . '/output';
 
 for($i = 3; $i < count($argv); $i++) {
     if(! file_exists($argv[$i])) die('"' .  $argv[$i] . '" is not exist.');
@@ -41,6 +42,8 @@ foreach($sources as $source) {
     echo "<source> : " . $source . "\n";
 }
 
+echo "<output dir> : " . $outputDir . "\n";
+
 $coverage_obj = new CodeCoverage(
     (new Selector)->forLineAndPathCoverage($filter),
     $filter
@@ -48,6 +51,9 @@ $coverage_obj = new CodeCoverage(
 
 $queue1 = [$initial_input];
 $queue2 = [];
+$global_bucketed_branch = [];
+
+set_shutdown_handler();
 
 for($tc = 0; ;$tc++) {
     try {
@@ -59,21 +65,26 @@ for($tc = 0; ;$tc++) {
         
         $cur_input = mutate($prev_input);
         $cur_branch = TEST($cur_input);
-        if(has_branch_difference($prev_branch, $cur_branch)) {
+
+        // (현재 input에 대한) $branch = cur-branch - prev_branch
+        $branch = get_current_input_branch_coverage($prev_branch, $cur_branch);
+        // (현재 input에 대한) $bucketed_branch = get_bucketed_branch_from_branch_coverage(branch)
+        $bucketed_branch = get_bucketed_branch_from_branch_coverage($branch);
+
+        if(has_bucketed_branch_difference($global_bucketed_branch, $bucketed_branch)) {
             $queue1[] = $cur_input;
             echo "\nInteresting finded!\n";
         }
-
-        echo get_branch_acc_from_branch_coverage($cur_branch) . ' ';
+        echo get_bucketed_branch_acc_from_branch_coverage($global_bucketed_branch) . ' ';
+        $global_bucketed_branch = add_bucketed_branch_coverage_to_global_bucketed_branch($global_bucketed_branch, $bucketed_branch);
 
         unset($prev_branch);
         $prev_branch = $cur_branch;
-
     }
     catch(Exception $e) {
-        echo 'Exception Message : ' . $e->getMessage();
+        // echo "\n" . 'Exception Message : ' . $e->getMessage() . "\n";
     } catch(Error $e) {
-        echo 'Error Message : ' . $e->getMessage();
+        echo "\n" . 'Error Message : ' . $e->getMessage() . "\n";
     }
 }
 
@@ -105,6 +116,69 @@ function has_branch_difference($prev_branch, $cur_branch) {
     }
 }
 
+// 이전까지 누적 bucked_branch (= 한번에 구한 branch X, 우리가 직접 누적시켜야 할듯), 현재input만의 branch 비교
+function has_bucketed_branch_difference($global_bucketed_branch, $cur_bucketed_branch) {
+    foreach ($cur_bucketed_branch as $file => $functions) {
+        foreach ($functions as $functionName => $functionData) {
+            foreach($functionData['branches'] as $branchId => $bucketData){
+                foreach($bucketData as $bucketId => $bucketcover){
+                    if(!isset($global_bucketed_branch[$file][$functionName]['branches'][$branchId][$bucketId])){
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+}
+
+function add_bucketed_branch_coverage_to_global_bucketed_branch($global_bucketed_branch, $bucketed_branch){
+    foreach ($bucketed_branch as $file => $functions) {
+        foreach ($functions as $functionName => $functionData) {
+            foreach($functionData['branches'] as $branchId => $bucketData){
+                foreach($bucketData as $bucketId => $v){
+                    if(isset($global_bucketed_branch[$file][$functionName]['branches'][$branchId][$bucketId])){
+                        $global_bucketed_branch[$file][$functionName]['branches'][$branchId][$bucketId] += $v;
+                    }
+                    else{
+                        $global_bucketed_branch[$file][$functionName]['branches'][$branchId][$bucketId] = $v;
+                    }
+                }
+            }
+        }
+    }
+    return $global_bucketed_branch;
+}  
+
+function get_bucketed_branch_acc_from_branch_coverage($bucketed_branch_coverage){
+    $acc = 0;
+    foreach ($bucketed_branch_coverage as $file => $functions) {
+        foreach ($functions as $functionName => $functionData) {
+            foreach ($functionData['branches'] as $branchId => $branch_bucket) {     
+                foreach($branch_bucket as $bucketId => $hasCovered){
+                    if($hasCovered){
+                        $acc++;
+                    }
+                } 
+            }
+        }
+    }
+    return $acc;
+}
+
+function get_current_input_branch_coverage ($prev_acc_branch, $cur_acc_branch){
+    $branch = [];
+    foreach ($cur_acc_branch as $file => $functions) {
+        foreach ($functions as $functionName => $functionData) {
+            foreach ($functionData['branches'] as $branchId => $branchCount) {
+                if( ($branchCount - $prev_acc_branch[$file][$functionName]['branches'][$branchId]) > 0 ){
+                    $branch[$file][$functionName]['branches'][$branchId] 
+                        = $branchCount - $prev_acc_branch[$file][$functionName]['branches'][$branchId];
+                }
+            }
+        }
+    }
+    return $branch;
+}
 
 function mutate($input) {
     $mut_obj = new Mutator($input);
@@ -141,9 +215,9 @@ function get_branch_coverage_from_coverage_obj(CodeCoverage $coverage_obj) {
                 if ( (bool) $pathData['hit']) {
                     foreach ($pathData['path'] as $id => $branchId) {
                         if(isset($branch[$file][$functionName]['branches'][$branchId]))
-                            $branch[$file][$functionName]['branches'][$branchId] += 1;
-                        else
-                            $branch[$file][$functionName]['branches'][$branchId] = 1;
+                            $branch[$file][$functionName]['branches'][$branchId] += count($pathData['hit']);
+                        else 
+                            $branch[$file][$functionName]['branches'][$branchId] = count($pathData['hit']);
                     }
                 }
             }
@@ -152,13 +226,74 @@ function get_branch_coverage_from_coverage_obj(CodeCoverage $coverage_obj) {
     return $branch;
 }
 
+function getBucketId($branchIdCount){
+    if ($branchIdCount <= 1)
+        return 0;
+    else if ($branchIdCount == 2)
+        return 1;
+    else if ($branchIdCount <= 4)
+        return 2;
+    else if ($branchIdCount <= 8)
+        return 3;
+    else if ($branchIdCount <= 16)
+        return 4;
+    else if ($branchIdCount <= 32)
+        return 5;
+    else if ($branchIdCount <= 64)
+        return 6;
+    else if ($branchIdCount <= 128)
+        return 7;
+    else
+        return 8;
+}
+
+function get_bucketed_branch_from_branch_coverage($branchCoverage) {
+    $bucketed_branch = [];
+
+    foreach ($branchCoverage as $file => $functions) {
+        foreach ($functions as $functionName => $functionData) {
+            foreach ($functionData['branches'] as $branchId => $branchCount) {
+                $bucketId = getBucketId($branchCount);
+                if(isset($branch[$file][$functionName]['branches'][$branchId][$bucketId]))
+                    $bucketed_branch[$file][$functionName]['branches'][$branchId][$bucketId] += 1;
+                else
+                    $bucketed_branch[$file][$functionName]['branches'][$branchId][$bucketId] = 1;
+            }
+        }
+    }
+    return $bucketed_branch;
+}
+
+
+function set_shutdown_handler() {
+    \register_shutdown_function(function() {
+        global $outputDir, $cur_input;
+
+        echo "@@@@@@@@@@@@\n";
+        $error = \error_get_last();
+        if ($error === null) {
+            return;
+        }
+        
+        $crashInfo = "Fatal error: {$error['message']} in {$error['file']} on line {$error['line']}";
+
+        $hash = \md5($cur_input);
+        $path = $outputDir . '/crash-' . $hash . '.txt';
+        if (!file_exists($outputDir)) {
+            mkdir($outputDir, 0777, true);
+            echo "\n!!\n";
+        }
+        \file_put_contents($path, $cur_input);
+    });
+}
+
+
 function TEST(string $input) {
     global $coverage_obj, $target_file_path;
 
     $coverage_obj->start($target_file_path, false);
     TEST_ROUTINE($input);
     $coverage_obj->stop();
-    
     $branch_coverage = get_branch_coverage_from_coverage_obj($coverage_obj);
     
     return $branch_coverage;

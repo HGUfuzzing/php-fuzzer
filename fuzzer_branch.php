@@ -16,6 +16,9 @@ use SebastianBergmann\CodeCoverage\Report\Html\Facade as HtmlReport;
 if(!isset($argv[1]) || !isset($argv[2]) || !isset($argv[3])) 
     die('usage : php ' . pathinfo(__FILE__, PATHINFO_BASENAME) . ' <target_file> <input_file> <source1>[, <source2>, <source3>, ... ]');
 
+$timeout = 3;
+setupTimeoutHandler(); 
+
 $target_file_path = $argv[1];
 $input_file = $argv[2];
 $sources = [];
@@ -64,6 +67,9 @@ for($tc = 0; ;$tc++) {
         $prev_input = $queue1[$idx];
         
         $cur_input = mutate($prev_input);
+        if (extension_loaded('pcntl')) {
+            pcntl_alarm($timeout);
+        }
         $cur_branch = TEST($cur_input);
 
         // (현재 input에 대한) $branch = cur-branch - prev_branch
@@ -82,7 +88,7 @@ for($tc = 0; ;$tc++) {
         $prev_branch = $cur_branch;
     }
     catch(Exception $e) {
-        // echo "\n" . 'Exception Message : ' . $e->getMessage() . "\n";
+        // echo 'Exception Message : ' . $e->getMessage();
     } catch(Error $e) {
         echo "\n" . 'Error Message : ' . $e->getMessage() . "\n";
     }
@@ -183,9 +189,8 @@ function get_current_input_branch_coverage ($prev_acc_branch, $cur_acc_branch){
 function mutate($input) {
     $mut_obj = new Mutator($input);
 
-    $num = strlen($input) / 12;
-
-    for($i = 0; $i < $num; $i++) $mut_obj->mutate();
+    $times = strlen($input) / 12;
+    $mut_obj->mutate($times);
 
     return $mut_obj->getInput();
 }
@@ -297,4 +302,14 @@ function TEST(string $input) {
     $branch_coverage = get_branch_coverage_from_coverage_obj($coverage_obj);
     
     return $branch_coverage;
+}
+
+function setupTimeoutHandler() {
+    if (extension_loaded('pcntl')) {
+        pcntl_signal(SIGALRM, function() {
+            echo "\n@@@@@@@@@@@\n";
+            throw new Error("Timeout exceeded\n");
+        });
+        pcntl_async_signals(true);
+    }
 }

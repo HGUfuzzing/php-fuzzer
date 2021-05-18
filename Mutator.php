@@ -105,24 +105,40 @@
                     . substr($this->input, $pos);
         }
 
-        function mutate(){
+        function mutate($times){
             $r = rand(0, 7);
             switch ($r){
                 case 0:
-                    return $this->delete_random_character();
+                    for($i=0; $i<$times; $i++)
+                        $this->input = $this->delete_random_character();
+                    break;
                 case 1:
-                    return $this->insert_random_character();
+                    for($i=0; $i<$times; $i++)
+                        $this->input = $this->insert_random_character();
+                    break;
                 case 2:
-                    return $this->alternate_random_character();
+                    for($i=0; $i<$times; $i++)
+                        $this->input = $this->alternate_random_character();
+                    break;
                 case 3:
-                    return $this->insert_repeated_random_characters();
+                    for($i=0; $i<$times; $i++)
+                        $this->input = $this->insert_repeated_random_characters();
+                    break;
                 case 4:
-                    return $this->flip_1bit();
+                    for($i=0; $i<$times; $i++)
+                        $this->input = $this->flip_1bit();
+                    break;
                 case 5:
-                    return $this->flip_2bits();
+                    for($i=0; $i<$times; $i++)
+                        $this->input = $this->flip_2bits();
+                    break;
                 case 6:
-                    return $this->flip_4bits();
+                    for($i=0; $i<$times; $i++)
+                        $this->input = $this->flip_4bits();
+                    break;
             }
+            
+            return $this->input;
         }
     }
 

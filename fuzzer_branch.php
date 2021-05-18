@@ -16,7 +16,7 @@ use SebastianBergmann\CodeCoverage\Report\Html\Facade as HtmlReport;
 if(!isset($argv[1]) || !isset($argv[2]) || !isset($argv[3])) 
     die('usage : php ' . pathinfo(__FILE__, PATHINFO_BASENAME) . ' <target_file> <input_file> <source1>[, <source2>, <source3>, ... ]');
 
-$timeout = 3;
+$timeout = 6;
 setupTimeoutHandler(); 
 
 $target_file_path = $argv[1];
@@ -282,14 +282,20 @@ function set_shutdown_handler() {
         
         $crashInfo = "Fatal error: {$error['message']} in {$error['file']} on line {$error['line']}";
 
-        $hash = \md5($cur_input);
-        $path = $outputDir . '/crash-' . $hash . '.txt';
-        if (!file_exists($outputDir)) {
-            mkdir($outputDir, 0777, true);
-            echo "\n!!\n";
-        }
-        \file_put_contents($path, $cur_input);
+        saveInputAsFile($outputDir, $cur_input, 'crash');
     });
+}
+
+// type = 'crash' | 'hang'
+function saveInputAsFile($outputDir, $input, $type) {
+    $hash = \md5($input);
+    $path = $outputDir . '/' . $type . '-' . $hash . '.txt';
+
+    if (!file_exists($outputDir)) {
+        mkdir($outputDir, 0777, true);
+        echo "\n!!\n";
+    }
+    \file_put_contents($path, $input);
 }
 
 
@@ -307,7 +313,9 @@ function TEST(string $input) {
 function setupTimeoutHandler() {
     if (extension_loaded('pcntl')) {
         pcntl_signal(SIGALRM, function() {
+            global $outputDir, $cur_input;
             echo "\n@@@@@@@@@@@\n";
+            saveInputAsFile($outputDir, $cur_input, 'hang');
             throw new Error("Timeout exceeded\n");
         });
         pcntl_async_signals(true);

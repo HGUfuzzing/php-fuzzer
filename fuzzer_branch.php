@@ -82,7 +82,7 @@ for($tc = 0; ;$tc++) {
         $prev_branch = $cur_branch;
     }
     catch(Exception $e) {
-        echo "\n" . 'Exception Message : ' . $e->getMessage() . "\n";
+        // echo "\n" . 'Exception Message : ' . $e->getMessage() . "\n";
     } catch(Error $e) {
         echo "\n" . 'Error Message : ' . $e->getMessage() . "\n";
     }
@@ -274,22 +274,19 @@ function set_shutdown_handler() {
         if ($error === null) {
             return;
         }
-
+        
         $crashInfo = "Fatal error: {$error['message']} in {$error['file']} on line {$error['line']}";
 
         $hash = \md5($cur_input);
         $path = $outputDir . '/crash-' . $hash . '.txt';
-        echo "\n!! $path\n";
         if (!file_exists($outputDir)) {
             mkdir($outputDir, 0777, true);
             echo "\n!!\n";
         }
-        echo "\n!!\n";
         \file_put_contents($path, $cur_input);
-        echo "\n!!\n";
-        echo $crashInfo;
     });
 }
+
 
 function TEST(string $input) {
     global $coverage_obj, $target_file_path;

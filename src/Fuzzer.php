@@ -70,7 +70,8 @@ class Fuzzer
                 if($this->runs % 500 === 0) {
                     gc_collect_cycles();
                     $this->corpusSet->removeDuplicates();
-                    echo "Clear (runs: {$this->runs})\n";
+                    $time = microtime(true) - $this->startTime;
+                    echo "Clear (runs: {$this->runs}, time: {$time}s)\n";
                 }
 
                 if (extension_loaded('pcntl'))

@@ -1,4 +1,5 @@
-/vendor
-/targets/*/vendor
-/tmp
-.gitignore
+vendor
+targets/*/vendor
+tmp
+output
+seed.txt

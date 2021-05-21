@@ -1,4 +1,9 @@
 {
+    "autoload": {
+        "psr-4": {
+            "Fuzzer\\": "src/"
+        }
+    },
     "require": {
         "phpunit/php-code-coverage": "^9.2"
     }

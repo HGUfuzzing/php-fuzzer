@@ -5,9 +5,6 @@ require_once __DIR__ . '/vendor/autoload.php';
 use Michelf\Markdown;
 use Michelf\MarkdownExtra;
 
-// $input = Markdown input
-function TEST_ROUTINE($input) 
-{
+$fuzzer->TEST_ROUTINE = function ($input){
     $result = Markdown::defaultTransform($input);
-}
-?>
+};

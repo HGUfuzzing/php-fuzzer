@@ -1,2 +1,4 @@
 /vendor
 /targets/*/vendor
+/tmp
+.gitignore

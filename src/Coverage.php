@@ -115,9 +115,10 @@ class Coverage
         $curBranchCoverage = [];
         foreach ($this->curExtractedCoverage as $file => $functions) {
             foreach ($functions as $functionName => $functionData) {
-                foreach ($functionData as $branchId => $curCount) {
-                    $prevCount = $this->prevExtractedCoverage[$file][$functionName][$branchId] ?? 0;
-                    $curBranchCoverage[$file][$functionName][$branchId] = $curCount - $prevCount;
+                foreach ($functionData as $branchId => $curAccCount) {
+                    $prevAccCount = $this->prevExtractedCoverage[$file][$functionName][$branchId] ?? 0;
+                    $curBranchCount = $curAccCount - $prevAccCount;
+                    if($curBranchCount) $curBranchCoverage[$file][$functionName][$branchId] = $curBranchCount;
                 }
             }
         }
@@ -154,25 +155,25 @@ class Coverage
     }
 
 
-    private static function getBucketId($branchIdCount): int{
-        if ($branchIdCount <= 1)
-            return 0;
-        else if ($branchIdCount == 2)
-            return 1;
-        else if ($branchIdCount <= 4)
-            return 2;
-        else if ($branchIdCount <= 8)
+    private static function getBucketId($branchCount): int {
+        if ($branchCount <= 3)
+            return $branchCount - 1;
+        else if ($branchCount <= 6)
             return 3;
-        else if ($branchIdCount <= 16)
+        else if ($branchCount <= 8)
             return 4;
-        else if ($branchIdCount <= 32)
+        else if ($branchCount <= 12)
             return 5;
-        else if ($branchIdCount <= 64)
+        else if ($branchCount <= 20)
             return 6;
-        else if ($branchIdCount <= 128)
+        else if ($branchCount <= 32)
             return 7;
-        else
+        else if ($branchCount <= 64)
             return 8;
+        else if ($branchCount <= 128)
+            return 9;
+        else
+            return 10;
     }
 }
 

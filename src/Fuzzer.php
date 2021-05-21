@@ -161,7 +161,7 @@ class Fuzzer
     private static function mutate($input) {
         $mutObj = new Mutator($input);
 
-        $times = strlen($input) / 12;
+        $times = rand(1, 3);
         $mutObj->mutate($times);
 
         return $mutObj->getInput();

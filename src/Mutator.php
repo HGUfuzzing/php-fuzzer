@@ -112,35 +112,31 @@ class Mutator {
 
     function mutate($times){
         $r = rand(0, 7);
-        switch ($r){
-            case 0:
-                for($i=0; $i<$times; $i++)
+        for($i=0; $i<$times; $i++) {
+            switch ($r){
+                case 0:
                     $this->input = $this->delete_random_character();
-                break;
-            case 1:
-                for($i=0; $i<$times; $i++)
+                    break;
+                case 1:
                     $this->input = $this->insert_random_character();
-                break;
-            case 2:
-                for($i=0; $i<$times; $i++)
+                    break;
+                case 2:
                     $this->input = $this->alternate_random_character();
-                break;
-            case 3:
-                for($i=0; $i<$times; $i++)
+                    break;
+                case 3:
                     $this->input = $this->insert_repeated_random_characters();
-                break;
-            case 4:
-                for($i=0; $i<$times; $i++)
+                    break;
+                case 4:
+                    
                     $this->input = $this->flip_1bit();
-                break;
-            case 5:
-                for($i=0; $i<$times; $i++)
+                    break;
+                case 5:
                     $this->input = $this->flip_2bits();
-                break;
-            case 6:
-                for($i=0; $i<$times; $i++)
+                    break;
+                case 6:
                     $this->input = $this->flip_4bits();
-                break;
+                    break;
+            }
         }
         
         return $this->input;

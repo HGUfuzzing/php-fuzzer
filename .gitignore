@@ -1,5 +1,5 @@
 vendor
 targets/*/vendor
 tmp
-output
-seed.txt
+output*
+seed*.txt

@@ -66,60 +66,53 @@ class Fuzzer
         }
         
         while($this->runs < $this->maxRuns) {
-            try {
-                if($this->runs % 500 === 0) {
-                    gc_collect_cycles();
-                    $this->corpusSet->removeDuplicates();
-                    $time = microtime(true) - $this->startTime;
-                    echo "Clear (runs: {$this->runs}, time: {$time}s)\n";
-                }
-
-                if (extension_loaded('pcntl'))
-                    pcntl_alarm($this->timeout);
-                
-                $origInput = $this->corpusSet->pickOne()->input;
-                $newInput = self::mutate($origInput);
-
-                $this->TEST($newInput);
-
-                $newCov = $this->coverage->getCurCoverage();
-                $origCov = $this->corpusSet->getLastPickedCorpus()->coverage;
-                
-                //INTEREST
-                if($this->coverage->wasInterested()) 
-                {
-                    //add to queue
-                    $this->corpusSet->pushNewCorpus($newInput, $this->coverage->getCurCoverage());
-
-                    //save the input as file
-                    $this->saveCurrentInput('INTEREST');
-
-                    //print action
-                    $this->printAction('INTEREST');
-
-                }
-                //REDUCE
-                else if(\strlen($newInput) < \strlen($origInput) &&
-                    Coverage::canFirstCoverSecond($newCov, $origCov)) {
-                    // remove orig input file and save cur input file
-                    $this->removeInputFile('INTEREST', $origInput);
-                    $this->saveCurrentInput('INTEREST');
-
-                    //replace orig input with new input
-                    $this->corpusSet->replaceWithLastPickedCorpus($newInput, $newCov);
-
-                    //print action
-                    $this->printAction('REDUCE');
-                }
-                else {
-                    // echo "@\n";
-                    // what if it wouldn't find something for a long time?
-                }
+            if($this->runs % 100 === 0) {
+                gc_collect_cycles();
+                $this->corpusSet->removeDuplicates();
+                $time = microtime(true) - $this->startTime;
+                echo "Clear (runs: {$this->runs}, time: {$time}s)\n";
             }
-            catch(Exception $e) {
-                // echo 'Exception Message : ' . $e->getMessage();
-            } catch(Error $e) {
-                echo "\n" . 'Error Message : ' . $e->getMessage() . "\n";
+
+            if (extension_loaded('pcntl'))
+                pcntl_alarm($this->timeout);
+            
+            $origInput = $this->corpusSet->pickOne()->input;
+            $newInput = self::mutate($origInput);
+
+            $this->TEST($newInput);
+
+            $newCov = $this->coverage->getCurCoverage();
+            $origCov = $this->corpusSet->getLastPickedCorpus()->coverage;
+            
+            //INTEREST
+            if($this->coverage->wasInterested()) 
+            {
+                //add to queue
+                $this->corpusSet->pushNewCorpus($newInput, $this->coverage->getCurCoverage());
+
+                //save the input as file
+                $this->saveCurrentInput('INTEREST');
+
+                //print action
+                $this->printAction('INTEREST');
+
+            }
+            //REDUCE
+            else if(\strlen($newInput) < \strlen($origInput) &&
+                Coverage::canFirstCoverSecond($newCov, $origCov)) {
+                // remove orig input file and save cur input file
+                $this->removeInputFile('INTEREST', $origInput);
+                $this->saveCurrentInput('INTEREST');
+
+                //replace orig input with new input
+                $this->corpusSet->replaceWithLastPickedCorpus($newInput, $newCov);
+
+                //print action
+                $this->printAction('REDUCE');
+            }
+            else {
+                // echo "@\n";
+                // what if it wouldn't find something for a long time?
             }
         }
     }
@@ -146,9 +139,19 @@ class Fuzzer
 
     private function TEST(string $input) {
         $this->runs++;
-        $this->coverage->start($this->targetFilePath);
         $this->curInput = $input;
-        $this->TEST_ROUTINE($input);   // defined from target driver.
+
+        $this->coverage->start($this->targetFilePath);
+
+        try {
+            $this->TEST_ROUTINE($input);   // Defined from target driver.
+        }
+        catch(\Exception $e) {
+        } 
+        catch(\Error $e) {
+            echo 'Caught Error Message : ' . $e->getMessage() . "\n";
+        }
+
         $this->coverage->stop();
     }
 
@@ -187,7 +190,7 @@ class Fuzzer
                 return;
             }
             
-            $crashInfo = "Fatal error: {$error['message']} in {$error['file']} on line {$error['line']}";
+            $crashInfo = "!! Fatal error: {$error['message']} in {$error['file']} on line {$error['line']}";
     
             $this->saveCurrentInput('CRASH');
         });
@@ -197,7 +200,7 @@ class Fuzzer
         if (extension_loaded('pcntl')) {
             pcntl_signal(SIGALRM, function() {
                 $this->saveCurrentInput('HANG');
-                throw new Error("Timeout exceeded\n");
+                throw new \Error("Timeout exceeded\n");
             });
             pcntl_async_signals(true);
         }

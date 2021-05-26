@@ -44,6 +44,11 @@ class Fuzzer
 
     public function init() {
         $this->handleCmdLineArgs();
+
+        if (file_exists($this->resultFilePath)) {
+            unlink($this->resultFilePath);
+        }
+
         // $this->coverage = new Coverage($this->targetSources);
         $this->coverage = new CoverageLine($this->targetSources);
 

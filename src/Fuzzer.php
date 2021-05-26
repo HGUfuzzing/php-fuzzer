@@ -2,7 +2,8 @@
 namespace Fuzzer;
 
 use Fuzzer\Mutator;
-use Fuzzer\Coverage;
+// use Fuzzer\Coverage;
+use Fuzzer\CoverageLine;
 use Fuzzer\CorpusSet;
 
 class Fuzzer
@@ -14,7 +15,8 @@ class Fuzzer
     public $targetSources;
     public $outputDir;
     
-    public ?Coverage $coverage = null;
+    // public ?Coverage $coverage = null;
+    public ?CoverageLine $coverage = null;
 
     public ?CorpusSet $corpusSet = null;  //corpus object로! (save current input 등의 functon도 corpus class 로 이동.)
     public $curInput;
@@ -40,7 +42,8 @@ class Fuzzer
 
     public function init() {
         $this->handleCmdLineArgs();
-        $this->coverage = new Coverage($this->targetSources);
+        // $this->coverage = new Coverage($this->targetSources);
+        $this->coverage = new CoverageLine($this->targetSources);
 
         $this->runs = 0;
         $this->startTime = microtime(true);
@@ -99,7 +102,8 @@ class Fuzzer
             }
             //REDUCE
             else if(\strlen($newInput) < \strlen($origInput) &&
-                Coverage::canFirstCoverSecond($newCov, $origCov)) {
+                // Coverage::canFirstCoverSecond($newCov, $origCov)) {
+                CoverageLine::canFirstCoverSecond($newCov, $origCov)) {
                 // remove orig input file and save cur input file
                 $this->removeInputFile('INTEREST', $origInput);
                 $this->saveCurrentInput('INTEREST');

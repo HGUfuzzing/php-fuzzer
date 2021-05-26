@@ -14,6 +14,7 @@ class Fuzzer
     public $inputFilePath;
     public $targetSources;
     public $outputDir;
+    public $resultFilePath;
     
     // public ?Coverage $coverage = null;
     public ?CoverageLine $coverage = null;
@@ -29,6 +30,7 @@ class Fuzzer
 
     public function __construct($argv) {
         $this->outputDir = getcwd() . '/output';
+        $this->resultFilePath = getcwd() . '/result.txt';
         $this->argv = $argv;
     }
 
@@ -157,6 +159,7 @@ class Fuzzer
         }
 
         $this->coverage->stop();
+        $this->writeResult();
     }
 
 
@@ -260,6 +263,16 @@ class Fuzzer
             $time, self::formatBytes($mem));
     }
 
+    private function writeResult() {
+        $time = microtime(true) - $this->startTime;
+        $acc = $this->coverage->getAccCount();
+        $runs = $this->runs;
+
+        $fp = \fopen($this->resultFilePath, 'a');
+        $row = sprintf("%.3f %d %d\n", $time, $acc, $runs);
+        fwrite($fp, $row);  
+        \fclose($fp);
+    }
 
     private static function formatBytes(int $bytes): string {
         if ($bytes < 10 * 1024) {

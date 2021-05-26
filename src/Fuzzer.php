@@ -274,7 +274,7 @@ class Fuzzer
         $runs = $this->runs;
 
         $fp = \fopen($this->resultFilePath, 'a');
-        $row = sprintf("%.3f %d %d\n", $time, $acc, $runs);
+        $row = sprintf("%.3f, %d, %d\n", $time, $acc, $runs);
         fwrite($fp, $row);  
         \fclose($fp);
     }

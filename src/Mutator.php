@@ -21,6 +21,19 @@ class Mutator {
         ];
     }
 
+    public function __call($method, $args)
+    {
+        if (isset($this->$method)) {
+            $func = $this->$method;
+            return call_user_func_array($func, $args);
+        }
+    }
+
+    public function addCustomMutationOperator($func, $name) {
+        $this->$name = $func;
+        $this->mutators[] = ([$this, $name]);
+    }
+
     public function getMutators(): array {
         return $this->mutators;
     }

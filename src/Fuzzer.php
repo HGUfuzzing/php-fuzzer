@@ -20,6 +20,7 @@ class Fuzzer
     public ?CorpusSet $corpusSet = null;  //corpus object로! (save current input 등의 functon도 corpus class 로 이동.)
     public $curInput;
     public $mutator;
+    public array $customMutationOperators = [];
 
     public $timeout = 3;
     public $maxRuns = PHP_INT_MAX;
@@ -65,6 +66,7 @@ class Fuzzer
             require $targetFilePath;
         })($this);
 
+        $this->setCustomMutationOperators();
     }
 
     public function run() {
@@ -125,6 +127,18 @@ class Fuzzer
         }
     }
 
+    public function addCustomMutationOperator($func, $name) {
+        $this->customMutationOperators[] = [$func, $name];
+    }
+
+    private function setCustomMutationOperators() {
+        foreach($this->customMutationOperators as $m) {
+            $func = $m[0];
+            $name = $m[1];
+            $this->mutator->addCustomMutationOperator($func, $name);
+            echo "Set Customized Mutation Operator : {$name}\n";
+        }
+    }
 
     private function handleCmdLineArgs() {
         if(!isset($this->argv[1]) || !isset($this->argv[2]) || !isset($this->argv[3])) 

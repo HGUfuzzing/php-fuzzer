@@ -41,9 +41,10 @@ class CorpusSet
             return;
         }
 
-        $this->totalBytes -= \strlen($this->getLastPickedCorpus()->input);
+        $prevCorpus = $this->getLastPickedCorpus();
+        $this->totalBytes -= \strlen($prevCorpus->input);
 
-        $this->queue[$this->lastPickedIdx] = new Corpus($input, $cov);
+        $this->queue[$this->lastPickedIdx] = new Corpus($input, $cov, $prevCorpus->energy);
         
         $this->totalBytes += \strlen($input);
 
@@ -59,13 +60,17 @@ class CorpusSet
     }
 
     public function pickOne() {
-        if(count($this->queue) === 0) {
-            $this->lastPickedIdx = -1;
-            return '';
+        $sumOfEnergy = $this->getSumOfEnergy();
+        $randNum = rand(1, $sumOfEnergy);
+
+        for($idx = 0; $idx < count($this->queue); $idx++) {
+            $randNum -= $this->queue[$idx]->energy;
+            if($randNum < 1) {
+                return $this->pick($idx);
+            }
         }
-        $idx = rand(0, count($this->queue) - 1);
-        $this->lastPickedIdx = $idx;
-        return $this->queue[$idx];
+
+        return $this->pick(0);
     }
 
     public function removeDuplicates() {
@@ -91,6 +96,22 @@ class CorpusSet
         return $this->queue[$idx];
     }
 
+    public function giveEnergyToLastPickedCorpus(int $energy) {
+        $idx = $this->lastPickedIdx;
+        if($idx === -1)
+            return;
+
+        $this->queue[$idx]->gainEnergy($energy);
+    }
+
+    public function depriveEnergyFromLastPickedCorpus(int $energy) {
+        $idx = $this->lastPickedIdx;
+        if($idx === -1)
+            return;
+
+        $this->queue[$idx]->loseEnergy($energy);
+    }
+
     public function getNumOfCorpus() {
         return count($this->queue);
     }
@@ -101,6 +122,29 @@ class CorpusSet
     
     public function getMaxInputLen() {
         return $this->maxInputLen;
+    }
+
+    public function getSumOfEnergy() {
+        $sumOfEnergy = 0;
+        for($i = 0; $i < count($this->queue); $i++) {
+            $sumOfEnergy += $this->queue[$i]->energy;
+        }
+        return $sumOfEnergy;
+    }
+
+    // for test
+    public function print() {
+        $str = '';
+        for($i = 0; $i < count($this->queue); $i++) {
+            $str .= sprintf("%d(%db)", $this->queue[$i]->energy, strlen($this->queue[$i]->input)); 
+            if($i !== count($this->queue) - 1)
+                $str .= ", ";
+        }
+        echo $str . "\n";
+    }
+    private function pick($idx) {
+        $this->lastPickedIdx = $idx;
+        return $this->queue[$idx];
     }
 
 }

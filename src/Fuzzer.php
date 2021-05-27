@@ -97,6 +97,9 @@ class Fuzzer
             //INTEREST
             if($this->coverage->wasInterested()) 
             {
+                //give energy to last picked corpus
+                $this->corpusSet->giveEnergyToLastPickedCorpus(25);
+
                 //add to queue
                 $this->corpusSet->pushNewCorpus($newInput, $this->coverage->getCurCoverage());
 
@@ -121,6 +124,7 @@ class Fuzzer
                 $this->printAction('REDUCE');
             }
             else {
+                $this->corpusSet->depriveEnergyFromLastPickedCorpus(1);
                 // echo "@\n";
                 // what if it wouldn't find something for a long time?
             }

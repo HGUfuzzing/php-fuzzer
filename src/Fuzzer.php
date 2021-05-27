@@ -13,6 +13,7 @@ class Fuzzer
     public $inputFilePath;
     public $targetSources;
     public $outputDir;
+    public $resultFilePath;
     
     public ?Coverage $coverage = null;
 
@@ -28,6 +29,7 @@ class Fuzzer
     public function __construct($argv) {
         $this->outputDir = getcwd() . '/output';
         $this->argv = $argv;
+        $this->resultFilePath = getcwd() . '/result.csv';
         $this->mutator = new Mutator();
     }
 
@@ -41,6 +43,11 @@ class Fuzzer
 
     public function init() {
         $this->handleCmdLineArgs();
+        
+        if (file_exists($this->resultFilePath)) {
+            unlink($this->resultFilePath);
+        }
+
         $this->coverage = new Coverage($this->targetSources);
 
         $this->runs = 0;
@@ -154,6 +161,7 @@ class Fuzzer
         }
 
         $this->coverage->stop();
+        $this->writeResult();
     }
 
 
@@ -246,6 +254,18 @@ class Fuzzer
             self::formatBytes($this->corpusSet->getTotalBytes()),
             \strlen($this->corpusSet->getLastPickedCorpus()->input), $maxLen,
             $time, self::formatBytes($mem));
+    }
+
+
+    private function writeResult() {
+        $time = microtime(true) - $this->startTime;
+        $acc = $this->coverage->getAccCount();
+        $runs = $this->runs;
+
+        $fp = \fopen($this->resultFilePath, 'a');
+        $row = sprintf("%.3f, %d, %d\n", $time, $acc, $runs);
+        fwrite($fp, $row);  
+        \fclose($fp);
     }
 
 

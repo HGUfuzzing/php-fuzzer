@@ -28,6 +28,7 @@ class Fuzzer
     public function __construct($argv) {
         $this->outputDir = getcwd() . '/output';
         $this->argv = $argv;
+        $this->mutator = new Mutator();
     }
 
     public function __call($method, $args)
@@ -66,7 +67,7 @@ class Fuzzer
         }
         
         while($this->runs < $this->maxRuns) {
-            if($this->runs % 100 === 0) {
+            if($this->runs % 1000 === 0) {
                 gc_collect_cycles();
                 $this->corpusSet->removeDuplicates();
                 $time = microtime(true) - $this->startTime;
@@ -77,7 +78,7 @@ class Fuzzer
                 pcntl_alarm($this->timeout);
             
             $origInput = $this->corpusSet->pickOne()->input;
-            $newInput = self::mutate($origInput);
+            $newInput = $this->mutator->mutate($origInput, $this->corpusSet->GetRandomOne()->$input);
 
             $this->TEST($newInput);
 
@@ -159,15 +160,6 @@ class Fuzzer
     private function pickOneFromQ() {
         $idx = rand(0, count($this->queue) - 1);
         return $this->queue[$idx];
-    }
-
-    private static function mutate($input) {
-        $mutObj = new Mutator($input);
-
-        $times = rand(1, 3);
-        $mutObj->mutate($times);
-
-        return $mutObj->getInput();
     }
 
     private function readTextFromFile($file) {

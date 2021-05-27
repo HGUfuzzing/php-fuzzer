@@ -50,6 +50,13 @@ class CorpusSet
         $this->maxInputLen = \max($this->maxInputLen, \strlen($input));
     }
 
+    public function GetRandomOne() {
+        if(count($this->queue) === 0) {
+            return '';
+        }
+        $idx = rand(0, count($this->queue) - 1);
+        return $this->queue[$idx];
+    }
 
     public function pickOne() {
         if(count($this->queue) === 0) {

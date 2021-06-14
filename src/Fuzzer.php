@@ -91,7 +91,7 @@ class Fuzzer
                 pcntl_alarm($this->timeout);
             
             $origInput = $this->corpusSet->pickOne()->input;
-            $newInput = $this->mutator->mutate($origInput, $this->corpusSet->GetRandomOne()->$input);
+            $newInput = $this->mutator->mutate($origInput);
 
             $this->TEST($newInput);
 
@@ -125,7 +125,7 @@ class Fuzzer
                 $this->corpusSet->replaceWithLastPickedCorpus($newInput, $newCov);
 
                 //print action
-                $this->printAction('REDUCE');
+                $this->printAction('REDUCED');
             }
             else {
                 $this->corpusSet->depriveEnergyFromLastPickedCorpus(1);
@@ -252,7 +252,6 @@ class Fuzzer
             unlink($path);
         }
         else {
-            echo "????????????????????? {$path}\n";
         }
     }
 
@@ -266,16 +265,14 @@ class Fuzzer
         $accCovsCnt = $this->coverage->getAccCount();
         $numCorpus = $this->corpusSet->getNumOfCorpus();
 
-        $maxLen = $this->corpusSet->getMaxInputLen();
-        $maxLenSize = \strlen((string)$maxlen);
         echo sprintf(
-            "%-10s run: %d (%4.0f runs/s]), accCovs: %d (%.0f covs/s]), corp: %d (%s), len: %{$maxLenSize}/%d, time: %.0fs, mem: %s\n",
-            $action, $this->runs, $this->runs / $time,
+            "%-10s reps: %d (%4.0f reps/s), coverage: %d (%.0f covs/s), interests: %d (%s), time: %.0fs, mem: %s\n",
+            '[' . $action . ']', $this->runs, $this->runs / $time,
             $accCovsCnt, $accCovsCnt / $time,
             $numCorpus,
             self::formatBytes($this->corpusSet->getTotalBytes()),
-            \strlen($this->corpusSet->getLastPickedCorpus()->input), $maxLen,
-            $time, self::formatBytes($mem));
+            \strlen($this->corpusSet->getLastPickedCorpus()->input),
+            self::formatBytes($mem));
     }
 
 

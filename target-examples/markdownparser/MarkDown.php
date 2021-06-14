@@ -9,15 +9,13 @@ $fuzzer->TEST_ROUTINE = function ($input){
     $result = Markdown::defaultTransform($input);
 };
 
-$fuzzer->addCustomMutationOperator(function(string $str, int $maxLen) {
+$fuzzer->addCustomMutationOperator(function(string $str) {
     $result = "** test **\n" . $str;
-    // echo "addEmphasis\n";
     return \strlen($result) <= $maxLen ? $result : null;
 }, 'addEmphasis');
 
-$fuzzer->addCustomMutationOperator(function(string $str, int $maxLen) {
+$fuzzer->addCustomMutationOperator(function(string $str) {
     $result = "> test\n" . $str;
-    // echo "addBlockQuotes\n";
     return \strlen($result) <= $maxLen ? $result : null;
 }, 'addBlockQuotes');
 

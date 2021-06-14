@@ -1,7 +1,11 @@
 <?php
+/*
+    This code is referenced from 
+        https://github.com/nikic/PHP-Fuzzer/blob/master/src/Mutation/Mutator.php
+*/
+
 namespace Fuzzer;
 
-//Cross over 추가하기.
 class Mutator {
     private array $mutators;
     private ?string $crossOverWith = null; 

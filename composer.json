@@ -1,10 +1,13 @@
 {
+    "name": "hgu/fuzzphp",
+    "license": "MIT",
+    "require": {
+        "phpunit/php-code-coverage": "^9.2"
+    },
     "autoload": {
         "psr-4": {
             "Fuzzer\\": "src/"
         }
     },
-    "require": {
-        "phpunit/php-code-coverage": "^9.2"
-    }
+    "bin": ["bin/fuzzphp"]
 }

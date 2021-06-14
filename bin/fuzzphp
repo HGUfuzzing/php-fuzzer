@@ -1,9 +1,8 @@
+#!/usr/bin/env php
 <?php
-
-//include all autoload files.
-require_once __DIR__ . '/vendor/autoload.php';
-
 use Fuzzer\Fuzzer;
+
+require_once dirname(__DIR__, 1) . '/vendor/autoload.php';
 
 $fuzzer = new Fuzzer($argv);
 $fuzzer->init();

@@ -13,7 +13,7 @@ class Fuzzer
     public $inputFilePath;
     public $targetSources;
     public $outputDir;
-    public $resultFilePath;
+    public $statusFilePath;
     
     public ?Coverage $coverage = null;
 
@@ -30,7 +30,7 @@ class Fuzzer
     public function __construct($argv) {
         $this->outputDir = getcwd() . '/output';
         $this->argv = $argv;
-        $this->resultFilePath = getcwd() . '/result.csv';
+        $this->statusFilePath = getcwd() . '/status.csv';
         $this->mutator = new Mutator();
     }
 
@@ -45,9 +45,13 @@ class Fuzzer
     public function init() {
         $this->handleCmdLineArgs();
         
-        if (file_exists($this->resultFilePath)) {
-            unlink($this->resultFilePath);
+        if (file_exists($this->statusFilePath)) {
+            unlink($this->statusFilePath);
         }
+
+        $fp = \fopen($this->statusFilePath, 'w');
+        fwrite($fp, "time, acc, runs\n");
+        \fclose($fp);
 
         $this->coverage = new Coverage($this->targetSources);
 
@@ -146,7 +150,7 @@ class Fuzzer
 
     private function handleCmdLineArgs() {
         if(!isset($this->argv[1]) || !isset($this->argv[2]) || !isset($this->argv[3])) 
-            die('usage : php ' . pathinfo(__FILE__, PATHINFO_BASENAME) . " <target_file> <input_file> <source1>[, <source2>, <source3>, ... ]\n");
+            die("usage : fuzzphp <target_file> <input_file> <source_dir>[, <source_dir>, ... ]\n");
 
         $this->targetFilePath = $this->argv[1];
         $this->inputFilePath = $this->argv[2];
@@ -280,7 +284,7 @@ class Fuzzer
         $acc = $this->coverage->getAccCount();
         $runs = $this->runs;
 
-        $fp = \fopen($this->resultFilePath, 'a');
+        $fp = \fopen($this->statusFilePath, 'a');
         $row = sprintf("%.3f, %d, %d\n", $time, $acc, $runs);
         fwrite($fp, $row);  
         \fclose($fp);

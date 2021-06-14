@@ -1,8 +1,5 @@
-This program is a greybox mutation-based fuzzer for PHP, which is for finding bugs by feeding random inputs generated based on code coverage of the PHP program measured by [phpunit/php-code-coverage](https://github.com/sebastianbergmann/php-code-coverage) .
+This program is a `greybox mutation-based fuzzer for PHP`, which is for finding bugs by feeding random inputs generated based on code coverage of the PHP program measured by [phpunit/php-code-coverage](https://github.com/sebastianbergmann/php-code-coverage).
 
-And, This fuzzer is designed for study purposes. 
-
-to get code coverage feedback and 
 
 ## Installation
 

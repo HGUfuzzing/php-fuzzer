@@ -115,17 +115,18 @@ class Fuzzer
 
             }
             //REDUCE
-            else if(\strlen($newInput) < \strlen($origInput) &&
-                Coverage::canFirstCoverSecond($newCov, $origCov)) {
-                // remove orig input file and save cur input file
-                $this->removeInputFile('INTEREST', $origInput);
-                $this->saveCurrentInput('INTEREST');
+            else if(Coverage::canFirstCoverSecond($newCov, $origCov)) {
+                if(\strlen($newInput) < \strlen($origInput)) {
+                    // remove orig input file and save cur input file
+                    $this->removeInputFile('INTEREST', $origInput);
+                    $this->saveCurrentInput('INTEREST');
 
-                //replace orig input with new input
-                $this->corpusSet->replaceWithLastPickedCorpus($newInput, $newCov);
+                    //replace orig input with new input
+                    $this->corpusSet->replaceWithLastPickedCorpus($newInput, $newCov);
 
-                //print action
-                $this->printAction('REDUCE');
+                    //print action
+                    $this->printAction('REDUCE');
+                }
             }
             else {
                 $this->corpusSet->depriveEnergyFromLastPickedCorpus(1);

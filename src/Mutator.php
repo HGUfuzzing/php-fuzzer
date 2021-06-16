@@ -8,6 +8,9 @@ namespace Fuzzer;
 
 class Mutator {
     private array $mutators;
+    private array $interesting8;
+    private array $interesting16;
+    private array $interesting32;
     private ?string $crossOverWith = null; 
 
     public function __construct() {
@@ -23,6 +26,67 @@ class Mutator {
             [$this, 'mutateCopyPart'],
             [$this, 'mutateCrossOver']
         ];
+        $this->interesting8 = array(
+            -128,
+            -1,
+            0,
+            1,
+            16,
+            32,
+            64,
+            100,
+            127
+        );
+        $this->interesting16 = array(
+            -32768,
+            -129,
+            128,
+            255,
+            256,
+            512,
+            1000,
+            1024,
+            4096,
+            32767,
+            -128,
+            -1,
+            0,
+            1,
+            16,
+            32,
+            64,
+            100,
+            127
+        );
+        $this->interesting32 = array(
+            -2147483648,
+            -100663046,
+            -32769,
+            32768,
+            65535,
+            65536,
+            100663045,
+            2147483647,
+            -32768,
+            -129,
+            128,
+            255,
+            256,
+            512,
+            1000,
+            1024,
+            4096,
+            32767,
+            -128,
+            -1,
+            0,
+            1,
+            16,
+            32,
+            64,
+            100,
+            127
+        );
     }
 
     public function __call($method, $args)
@@ -48,6 +112,18 @@ class Mutator {
 
     public function randomIntRange(int $minInclusive, $maxInclusive): int {
         return \mt_rand($minInclusive, $maxInclusive);
+    }
+
+    public function randomInteresting8(): int {
+        return \array_rand($this->interesting8);
+    }
+
+    public function randomInteresting16(): int {
+        return \array_rand($this->interesting16);
+    }
+
+    public function randomInteresting32(): int {
+        return \array_rand($this->interesting32);
     }
 
     public function randomChar(): string {

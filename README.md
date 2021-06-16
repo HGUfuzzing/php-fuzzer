@@ -3,7 +3,7 @@ This program is a `greybox mutation-based fuzzer for PHP`, which is for finding 
 
 ## Installation
 
-`composer global require hgu/fuzzphp`
+`composer global require hgu/fuzzphp` **(not yet)**
 
 ## Usage
 

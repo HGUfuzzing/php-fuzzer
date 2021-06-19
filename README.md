@@ -35,7 +35,7 @@ $fuzzer->addCustomMutationOperator(function(string $str, int $maxLen) {
 }, 'addBlockQuotes');
 ```
 
-**input.txt (example):**
+**input-dir/1.txt (example):**
 
 ```
 # heading
@@ -47,12 +47,21 @@ $fuzzer->addCustomMutationOperator(function(string $str, int $maxLen) {
 >> aaa
 ```
 
-The fuzzer starts with initial input string, which is firstly feeded to target program and mutated to generate more other input strings to be feeded. 
+**input-dir/2.txt (example):**
+```
+![alternative text](http://www.gstatic.com/webp/gallery/5.jpg "description")
 
-And, while fuzzing, the code coverage is measured based on <source-dir> directory that source directory for target PHP program, which is, for example, `vendor/michelf/php-markdown/Michelf`.
+![Kayak][logo]
+
+[logo]: http://www.gstatic.com/webp/gallery/2.jpg "To go kayaking."
+```
+
+The fuzzer starts with initial inputs stored in `<input-dir>` , which are firstly feeded to target program and mutated to generate more other input strings to be feeded. 
+
+And, while fuzzing, the code coverage is measured based on `<source-dir>` directory that source directory for target PHP program, which is, for example, `vendor/michelf/php-markdown/Michelf`.
 
 ```bash
-fuzzphp target-driver.php input.txt <source-dir>
+fuzzphp target-driver.php <input-dir> <source-dir>
 ```
 
 The fuzzer generates "interesting input" files in "output" directory when the fuzzer find them. 

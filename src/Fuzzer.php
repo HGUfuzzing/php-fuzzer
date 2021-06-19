@@ -10,7 +10,7 @@ class Fuzzer
     public $argv;
 
     public $targetFilePath;
-    public $inputFilePath;
+    public $inputDirPath;
     public $targetSources;
     public $outputDir;
     public $statusFilePath;
@@ -58,9 +58,17 @@ class Fuzzer
         $this->runs = 0;
         $this->startTime = microtime(true);
 
-        $initial_input = $this->readTextFromFile($this->inputFilePath);
-        $this->TEST($initial_input);
-        $this->corpusSet = new CorpusSet([$initial_input], [$this->coverage->getCurCoverage()]);
+        $initial_inputs = $this->readTextFilesFromDir($this->inputDirPath);
+        $initial_coverages = [];
+        foreach($initial_inputs as $input) {
+            $this->TEST($input);
+            $this->saveCurrentInput('INTEREST');
+            $initial_coverages[] = $this->coverage->getCurCoverage();
+        }
+        $cnt = count($initial_inputs);
+        echo "{$cnt} initial inputs have been added.\n";
+        
+        $this->corpusSet = new CorpusSet($initial_inputs, $initial_coverages);
 
         $this->setTimeoutHandler();
         $this->setShutdownHandler();
@@ -154,18 +162,20 @@ class Fuzzer
             die("usage : fuzzphp <target_file> <input_file> <source_dir>[, <source_dir>, ... ]\n");
 
         $this->targetFilePath = $this->argv[1];
-        $this->inputFilePath = $this->argv[2];
+        $this->inputDirPath = $this->argv[2];
         $this->targetSources = [];
 
         for($i = 3; $i < count($this->argv); $i++) {
             if(! file_exists($this->argv[$i])) die('"' .  $this->argv[$i] . '" is not exist.');
             $this->targetSources [] = $this->argv[$i];
         }
-        if(! file_exists($this->targetFilePath)) die('The target file is not exist.');
-        if(! file_exists($this->inputFilePath)) die('The input file is not exist.');
+        if(! file_exists($this->targetFilePath)) 
+            die("The target file \"$this->targetFilePath\" is not exist.");
+        if(! file_exists($this->inputDirPath) || !is_dir($this->inputDirPath)) 
+            die("The input directory \"$this->inputDirPath\" is not exist.");
 
         echo "<target file> : $this->targetFilePath \n";
-        echo "<input file> : $this->inputFilePath\n";
+        echo "<input directory> : $this->inputDirPath\n";
     }
 
     private function TEST(string $input) {
@@ -191,6 +201,21 @@ class Fuzzer
     private function pickOneFromQ() {
         $idx = rand(0, count($this->queue) - 1);
         return $this->queue[$idx];
+    }
+
+    private function readTextFilesFromDir($dir) {
+        $texts = [];
+        $files = [];
+        $filelist = scandir($dir);
+
+        foreach($filelist as $file) {
+            if($file == '.' || $file == '..') continue;
+            if(is_dir($file)) continue;
+            $texts[] =  $this->readTextFromFile($dir . '/' . $file);
+            $files[] = $file;
+        }
+        
+        return $texts;
     }
 
     private function readTextFromFile($file) {
